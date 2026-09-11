@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MMTC — Customer Login Prototype</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --surface:#171a21;
+    --surface-2:#1e222b;
+    --border:#2a2f3a;
+    --text:#f2f3f5;
+    --text-dim:#9aa2b1;
+    --gold:#e8b64f;
+    --silver:#c8cdd6;
+    --up:#3ddc84;
+    --down:#ff5a6e;
+    --accent:#3d7bff;
+    font-family:-apple-system,Roboto,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,#05060a,#12141a);
+    display:flex;
+    justify-content:center;
+    padding:24px 0;
+    min-height:100vh;
+  }
+  .phone{
+    width:390px;
+    height:844px;
+    background:var(--bg);
+    border-radius:38px;
+    border:8px solid #05060a;
+    box-shadow:0 30px 60px rgba(0,0,0,.5);
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    color:var(--text);
+  }
+  .notch{
+    position:absolute;
+    top:0; left:50%; transform:translateX(-50%);
+    width:150px; height:22px;
+    background:#05060a;
+    border-radius:0 0 16px 16px;
+    z-index:20;
+  }
+  .statusbar{
+    display:flex;
+    justify-content:space-between;
+    padding:10px 22px 4px;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+
+  .login-screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    padding:0 28px 40px;
+  }
+
+  .hero{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:16px;
+  }
+  .logo-badge{
+    width:78px;height:78px;border-radius:20px;
+    background:linear-gradient(135deg,var(--gold),#a97a1f);
+    display:flex;align-items:center;justify-content:center;
+    font-size:32px; color:#1a1200; font-weight:800;
+    box-shadow:0 10px 24px rgba(232,182,79,.25);
+  }
+  .brand-title{
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  .brand-sub{
+    font-size:13px;
+    color:var(--text-dim);
+    max-width:260px;
+    line-height:1.6;
+  }
+
+  .rate-preview{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+  }
+  .rate-chip{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:8px 14px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .rate-chip .up{color:var(--up); font-weight:700;}
+
+  .auth-area{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .google-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    padding:13px;
+    border-radius:14px;
+    background:#fff;
+    color:#1f1f1f;
+    font-size:14.5px;
+    font-weight:600;
+    border:1px solid var(--border);
+    cursor:pointer;
+    transition:.15s;
+  }
+  .google-btn:hover{background:#f4f4f4;}
+  .google-btn .g-icon{
+    width:20px;height:20px;
+    flex:none;
+  }
+  .google-btn.loading{
+    pointer-events:none;
+    opacity:.75;
+  }
+  .spinner{
+    width:16px;height:16px;
+    border:2px solid #d0d0d0;
+    border-top-color:#4285F4;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    display:none;
+  }
+  .google-btn.loading .spinner{display:inline-block;}
+  .google-btn.loading .g-icon, .google-btn.loading .g-label{display:none;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:6px 0;
+    color:var(--text-dim);
+    font-size:11.5px;
+  }
+  .divider::before, .divider::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--border);
+  }
+
+  .alt-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    padding:13px;
+    border-radius:14px;
+    background:var(--surface-2);
+    color:var(--text);
+    font-size:14px;
+    font-weight:600;
+    border:1px solid var(--border);
+    cursor:pointer;
+  }
+
+  .fine-print{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-dim);
+    line-height:1.6;
+    margin-top:6px;
+  }
+  .fine-print a{color:var(--accent); text-decoration:none;}
+
+  /* Google account picker sheet */
+  .overlay{
+    position:absolute; inset:0;
+    background:rgba(0,0,0,.55);
+    opacity:0; pointer-events:none;
+    transition:opacity .25s;
+    z-index:30;
+  }
+  .overlay.open{opacity:1; pointer-events:auto;}
+
+  .sheet{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    background:#fff;
+    color:#1f1f1f;
+    border-radius:20px 20px 0 0;
+    transform:translateY(100%);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    z-index:31;
+    padding:8px 0 26px;
+  }
+  .sheet.open{transform:translateY(0);}
+  .sheet-handle{
+    width:36px;height:4px;
+    background:#dcdcdc;
+    border-radius:4px;
+    margin:8px auto 14px;
+  }
+  .sheet-title{
+    text-align:center;
+    font-size:15px;
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  .sheet-sub{
+    text-align:center;
+    font-size:12px;
+    color:#6b6b6b;
+    margin-bottom:14px;
+    padding:0 30px;
+  }
+  .g-account{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 24px;
+    cursor:pointer;
+  }
+  .g-account:hover{background:#f7f7f7;}
+  .g-avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:linear-gradient(135deg,#4285F4,#34A853);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff; font-weight:700; font-size:14px;
+    flex:none;
+  }
+  .g-name{font-size:14px; font-weight:600;}
+  .g-email{font-size:12px; color:#6b6b6b;}
+  .g-account.add-new .g-avatar{
+    background:#f1f3f4; color:#5f6368; font-size:18px;
+  }
+
+  .success-screen{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:0 30px;
+    flex:1;
+  }
+  .success-screen.show{display:flex;}
+  .success-icon{
+    width:76px;height:76px;border-radius:50%;
+    background:rgba(61,220,132,.12);
+    color:var(--up);
+    display:flex;align-items:center;justify-content:center;
+    font-size:34px;
+    margin-bottom:20px;
+  }
+  .success-screen h2{margin:0 0 8px; font-size:19px;}
+  .success-screen p{margin:0; font-size:13px; color:var(--text-dim); line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <span>●●●●  Wi‑Fi 100%</span>
+  </div>
+
+  <div class="login-screen" id="loginScreen">
+    <div class="hero">
+      <div class="logo-badge">Au</div>
+      <div class="brand-title">MMTC Live Rates</div>
+      <div class="brand-sub">Real-time gold &amp; silver rates, compared across trusted sellers near you.</div>
+
+      <div class="rate-preview">
+        <div class="rate-chip">🥇 Gold <span class="up">▲</span></div>
+        <div class="rate-chip">⚪ Silver <span class="up">▲</span></div>
+      </div>
+    </div>
+
+    <div class="auth-area">
+      <button class="google-btn" id="googleBtn" onclick="startGoogleSignIn()">
+        <svg class="g-icon" viewBox="0 0 48 48">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.6 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.3 0 10.2-2 13.9-5.4l-6.4-5.4C29.4 34.9 26.8 36 24 36c-5.3 0-9.8-3.4-11.3-8.1l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.4 5.6-6.4 7.2l6.4 5.4C38.9 37.9 44 32.4 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+        </svg>
+        <span class="spinner"></span>
+        <span class="g-label">Continue with Google</span>
+      </button>
+
+      <div class="divider">or</div>
+
+      <button class="alt-btn" onclick="showToast('OTP login coming soon')">📱 Continue with Mobile OTP</button>
+
+      <div class="fine-print">By continuing, you agree to MMTC's <a href="#">Terms of Service</a> &amp; <a href="#">Privacy Policy</a></div>
+    </div>
+  </div>
+
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✓</div>
+    <h2>Welcome, Ananya</h2>
+    <p>Signed in as <b>ananya.rao@gmail.com</b><br>Redirecting to live rates…</p>
+  </div>
+
+  <!-- Google account picker -->
+  <div class="overlay" id="overlay" onclick="closeSheet()"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Choose an account</div>
+    <div class="sheet-sub">to continue to MMTC Live Rates</div>
+
+    <div class="g-account" onclick="signInAs('Ananya Rao','ananya.rao@gmail.com')">
+      <div class="g-avatar">AR</div>
+      <div>
+        <div class="g-name">Ananya Rao</div>
+        <div class="g-email">ananya.rao@gmail.com</div>
+      </div>
+    </div>
+    <div class="g-account" onclick="signInAs('Ananya (Work)','ananya.r@outlook.com')">
+      <div class="g-avatar" style="background:linear-gradient(135deg,#EA4335,#FBBC05);">A</div>
+      <div>
+        <div class="g-name">Ananya (Work)</div>
+        <div class="g-email">ananya.r@outlook.com</div>
+      </div>
+    </div>
+    <div class="g-account add-new" onclick="showToast('Opening Google Sign-In…')">
+      <div class="g-avatar">+</div>
+      <div>
+        <div class="g-name">Use another account</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" style="
+      position:absolute; bottom:30px; left:50%;
+      transform:translateX(-50%) translateY(20px);
+      background:#26293380; backdrop-filter:blur(6px);
+      border:1px solid var(--border); color:var(--text);
+      padding:10px 16px; border-radius:12px; font-size:12.5px;
+      opacity:0; transition:.25s; pointer-events:none; z-index:40; white-space:nowrap;">
+  </div>
+</div>
+
+<script>
+function tickClock(){
+  const now = new Date();
+  document.getElementById("clock").textContent = now.toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"});
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.opacity = 1;
+  t.style.transform = "translateX(-50%) translateY(0)";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.opacity = 0;
+    t.style.transform = "translateX(-50%) translateY(20px)";
+  }, 1600);
+}
+
+function startGoogleSignIn(){
+  const btn = document.getElementById("googleBtn");
+  btn.classList.add("loading");
+  setTimeout(() => {
+    btn.classList.remove("loading");
+    openSheet();
+  }, 700);
+}
+
+function openSheet(){
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("sheet").classList.add("open");
+}
+function closeSheet(){
+  document.getElementById("overlay").classList.remove("open");
+  document.getElementById("sheet").classList.remove("open");
+}
+
+function signInAs(name, email){
+  closeSheet();
+  document.querySelector(".success-screen h2").textContent = "Welcome, " + name.split(" ")[0];
+  document.querySelector(".success-screen p").innerHTML = "Signed in as <b>" + email + "</b><br>Redirecting to live rates…";
+  setTimeout(() => {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("successScreen").classList.add("show");
+  }, 200);
+}
+</script>
+
+</body>
+</html>
